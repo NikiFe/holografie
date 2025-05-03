@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="icon" href="TheConqurerCrop.jpg">
+    <title>Prezentace: Holografie</title>
+    <style>
+        /* --- Základní Reset a Nastavení --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden; /* Zabraňuje posouvání celé stránky */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #000000; /* Černé pozadí */
+            color: #e0e0e0; /* Světle šedá pro text - vysoký kontrast */
+        }
+
+        /* --- Kontejner Prezentace --- */
+        .presentation-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            overflow: hidden; /* Skryje slidy mimo viewport */
+        }
+
+        /* --- Styl Snímků --- */
+        .slide {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 50px 80px; /* Vnitřní odsazení */
+            opacity: 0; /* Skryté ve výchozím stavu */
+            visibility: hidden;
+            transition: opacity 0.7s ease-in-out, transform 0.5s ease; /* Plynulý přechod */
+            transform: scale(0.95); /* Lehký efekt oddálení u neaktivních */
+            background-color: #000000; /* Každý slide má černé pozadí */
+        }
+
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+            z-index: 1; /* Aktivní slide je nahoře */
+            transform: scale(1); /* Normální velikost pro aktivní */
+        }
+
+        /* --- Stylování Obsahu Snímku --- */
+        .slide h1 {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            color: #00bcd4; /* Azurová pro hlavní nadpisy */
+            text-shadow: 0 0 8px rgba(0, 188, 212, 0.7);
+        }
+
+        .slide h2 {
+            font-size: 2.5rem;
+            margin-bottom: 25px;
+            color: #ffffff; /* Bílá pro podnadpisy */
+            border-bottom: 2px solid #00bcd4;
+            padding-bottom: 10px;
+            display: inline-block;
+        }
+
+        .slide p {
+            font-size: 1.4rem;
+            line-height: 1.7;
+            max-width: 900px; /* Omezení šířky textu pro lepší čitelnost */
+            margin-bottom: 20px;
+            color: #cccccc; /* Mírně tmavší šedá pro běžný text */
+        }
+
+        .slide ul {
+            list-style: none; /* Odstranění odrážek */
+            padding-left: 0;
+            display: inline-block; /* Aby se seznam centroval */
+            text-align: left; /* Text v seznamu zarovnat doleva */
+            max-width: 800px;
+            margin-top: 20px;
+        }
+
+        .slide li {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            padding-left: 30px; /* Odsazení pro vlastní "odrážku" */
+            position: relative;
+        }
+
+        .slide li::before {
+            content: '»'; /* Vlastní odrážka */
+            position: absolute;
+            left: 0;
+            top: 0;
+            color: #00bcd4; /* Barva odrážky */
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+
+        .slide img, .slide video {
+            max-width: 80%;
+            max-height: 40vh; /* Omezení výšky médií */
+            height: auto;
+            margin-top: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 188, 212, 0.4); /* Jemný stín v barvě motivu */
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .slide .source-list {
+            font-size: 0.9rem;
+            margin-top: 40px;
+            color: #888888;
+            text-align: center;
+            width: 100%;
+        }
+         .slide .source-list a {
+             color: #aaaaaa;
+             text-decoration: none;
+         }
+         .slide .source-list a:hover {
+             color: #00bcd4;
+         }
+
+
+        /* --- Navigační Tlačítka --- */
+        .nav-button {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 10; /* Nad slidy */
+            background-color: rgba(0, 188, 212, 0.5); /* Poloprůhledné azurové */
+            color: #ffffff;
+            border: none;
+            padding: 15px 20px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+            opacity: 0.7;
+        }
+
+        .nav-button:hover {
+            background-color: rgba(0, 188, 212, 0.9); /* Zvýraznění při najetí */
+            opacity: 1;
+        }
+
+        .nav-button#prev {
+            left: 20px;
+        }
+
+        .nav-button#next {
+            right: 20px;
+        }
+
+        .nav-button:disabled {
+            background-color: rgba(100, 100, 100, 0.3);
+            cursor: not-allowed;
+            opacity: 0.4;
+        }
+
+        /* --- Indikátor Snímku (Volitelné) --- */
+        .slide-indicator {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 5;
+            color: #888;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 5px 15px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="presentation-container">
+
+        <!-- Snímek 1: Titulní strana -->
+        <div class="slide active">
+            <h1>Holografie</h1>
+            <p style="font-size: 1.8rem; color: #ffffff;">Fascinující svět trojrozměrného zobrazení</p>
+            <img src="TheConqurerCrop.jpg" alt="Ilustrace holografie" style="max-height: 50vh;">
+        </div>
+
+        <!-- Snímek 2: Definice holografie -->
+        <div class="slide">
+            <h2>Co je holografie?</h2>
+            <p>
+                Holografie je vědecká technika, která umožňuje záznam a následnou rekonstrukci trojrozměrného obrazu předmětu. Na rozdíl od fotografie, která zaznamenává pouze intenzitu světla, holografie zaznamenává jak intenzitu, tak i fázi světelné vlny odražené od objektu.
+            </p>
+            <p>
+                Výsledný záznam, nazývaný hologram, obsahuje mnohem více informací o scéně a umožňuje pozorovateli vidět obraz z různých úhlů, jako by se díval na skutečný předmět.
+            </p>
+             <img src="schema-static-fond-clair-en.gif" alt="Princip holografie">
+        </div>
+
+        <!-- Snímek 3: Základní princip - Záznam -->
+        <div class="slide">
+            <h2>Základní princip: Záznam</h2>
+            <p>
+                K záznamu hologramu je zapotřebí koherentního světla, typicky z laseru. Paprsek laseru se rozdělí na dva:
+            </p>
+            <ul>
+                <li><strong>Předmětový paprsek:</strong> Osvětluje zaznamenávaný objekt a odráží se od něj směrem k záznamovému médiu (např. fotografická deska).</li>
+                <li><strong>Referenční paprsek:</strong> Směřuje přímo na záznamové médium bez odrazu od objektu.</li>
+            </ul>
+            <p>
+                Na záznamovém médiu dochází k interferenci (skládání) těchto dvou paprsků. Vzniká složitý interferenční vzor, který kóduje informace o amplitudě i fázi světla z objektu.
+            </p>
+            <img src="Zaznam-hologramu.png" alt="Schéma záznamu hologramu">
+        </div>
+
+        <!-- Snímek 4: Základní princip - Rekonstrukce -->
+        <div class="slide">
+            <h2>Základní princip: Rekonstrukce</h2>
+            <p>
+                Pro zobrazení zaznamenaného obrazu je třeba hologram osvítit rekonstrukčním paprskem, který je ideálně stejný jako referenční paprsek použitý při záznamu (stejná vlnová délka a úhel dopadu).
+            </p>
+            <p>
+                Když světlo prochází nebo se odráží od interferenčního vzoru na hologramu, dochází k difrakci (ohybu světla). Tento ohyb rekonstruuje původní světelnou vlnu odraženou od objektu.
+            </p>
+            <p>
+                Pozorovatel pak vidí virtuální trojrozměrný obraz objektu zdánlivě umístěný za hologramem.
+            </p>
+            <img src="Rekonstrukce-hologramu.png" alt="Schéma rekonstrukce hologramu">
+        </div>
+
+        <!-- Snímek 5: Rozdíl od fotografie -->
+        <div class="slide">
+            <h2>Holografie vs. Fotografie</h2>
+            <p>Zatímco oba procesy zachycují obraz pomocí světla, existují klíčové rozdíly:</p>
+            <ul>
+                <li><strong>Informace:</strong> Fotografie zaznamenává pouze intenzitu (jas) světla. Holografie zaznamenává intenzitu i fázi světelné vlny.</li>
+                <li><strong>Dimenzionalita:</strong> Fotografie je 2D reprezentace. Hologram kóduje 3D informaci a umožňuje paralaxu (změnu pohledu s pohybem pozorovatele).</li>
+                <li><strong>Zdroj světla:</strong> Fotografie může vzniknout s běžným (nekoherentním) světlem. Holografie vyžaduje koherentní světlo (laser).</li>
+                <li><strong>Záznamové médium:</strong> Hologramy vyžadují médium s velmi vysokým rozlišením schopné zaznamenat jemné interferenční proužky.</li>
+                 <li><strong>Rekonstrukce:</strong> K prohlížení fotografie stačí běžné světlo. K vidění hologramu je často potřeba specifické osvětlení (např. laser nebo bodový zdroj světla).</li>
+            </ul>
+            <img src="hvp.png" alt="Porovnání fotografie a hologramu">
+        </div>
+
+        <!-- Snímek 6: Typy hologramů -->
+        <div class="slide">
+            <h2>Typy hologramů</h2>
+            <p>Existuje několik druhů hologramů, lišících se způsobem záznamu a rekonstrukce:</p>
+            <ul>
+                <li><strong>Transmisní hologramy:</strong> Rekonstrukční paprsek prochází hologramem. Obraz se objevuje za ním. Často vyžadují laser k rekonstrukci.</li>
+                <li><strong>Reflexní hologramy (Denisyukovy):</strong> Rekonstrukční paprsek se od hologramu odráží. Obraz se objevuje před ním. Mohou být často viditelné v bílém světle (např. bezpečnostní prvky).</li>
+                <li><strong>Duhové hologramy:</strong> Typ transmisního hologramu upravený tak, aby byl viditelný v bílém světle, i když s duhovými efekty při změně úhlu pohledu. Běžné na kreditních kartách.</li>
+                <li><strong>Počítačem generované hologramy (CGH):</strong> Interferenční vzor není vytvořen opticky, ale vypočítán počítačem a následně zapsán.</li>
+                <li><strong>Digitální holografie:</strong> Záznam i rekonstrukce probíhají pomocí digitálních senzorů (CCD/CMOS) a počítačových algoritmů.</li>
+            </ul>
+             <img src="Visa_Dove_Hologram_Rainbow.jpg" alt="Visa Hologram">
+        </div>
+
+        <!-- Snímek 7: Využití holografie -->
+        <div class="slide">
+            <h2>Využití holografie</h2>
+            <p>Holografie nachází uplatnění v mnoha oblastech:</p>
+            <ul>
+                <li><strong>Bezpečnostní prvky:</strong> Na bankovkách, kreditních kartách, dokladech totožnosti pro ochranu proti padělání.</li>
+                <li><strong>Datové úložiště:</strong> Potenciál pro ukládání obrovského množství dat v malém objemu (holografická paměť).</li>
+                <li><strong>Umění a reklama:</strong> Tvorba unikátních trojrozměrných vizuálních děl.</li>
+                <li><strong>Metrologie a nedestruktivní testování:</strong> Holografická interferometrie pro měření mikroskopických deformací a vibrací.</li>
+                <li><strong>Mikroskopie:</strong> Digitální holografická mikroskopie pro 3D zobrazování buněk a tkání bez nutnosti značení.</li>
+                <li><strong>Lékařství:</strong> Vizualizace dat z CT/MRI jako 3D hologramy, endoskopie.</li>
+                 <li><strong>Head-Up Displeje (HUD):</strong> V letectví a automobilovém průmyslu pro promítání informací do zorného pole řidiče/pilota.</li>
+            </ul>
+             <img src="50eur.jpg" alt="50 Euro bezpečnostní prvek">
+        </div>
+
+         <!-- Snímek 8: Budoucnost a Závěr -->
+        <div class="slide">
+            <h2>Budoucnost a Závěr</h2>
+            <p>
+                Holografie je stále se rozvíjející obor s obrovským potenciálem. Výzkum směřuje k vytváření dynamických, barevných hologramů v reálném čase, které by mohly způsobit revoluci v komunikaci, zábavě, vzdělávání a mnoha dalších odvětvích.
+            </p>
+            <p>
+                Výzvy jako výpočetní náročnost, potřeba speciálních zobrazovacích zařízení a omezení velikosti a úhlu pohledu jsou postupně překonávány.
+            </p>
+             <p style="font-size: 1.6rem; color: #00bcd4; margin-top: 30px;">Holografie nám otevírá dveře k plně trojrozměrné vizuální budoucnosti.</p>
+             <img src="holographic-displays-o-1.jpg" alt="Budoucnost holografie">
+        </div>
+
+        <!-- Snímek 9: Zdroje -->
+        <div class="slide">
+            <h2>Zdroje</h2>
+            <div class="source-list">
+                <ul>
+                    <li><a href="https://cs.wikipedia.org/wiki/Holografie" target="_blank">Wikipedie - Holografie</a></li>
+					<li><a href="https://youtu.be/EmKQsSDlaa4">How are holograms possible? - 3Blue1Brown</a></li>
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Navigační Tlačítka -->
+    <button class="nav-button" id="prev" title="Předchozí snímek (Šipka vlevo)" disabled><</button>
+    <button class="nav-button" id="next" title="Další snímek (Šipka vpravo)">></button>
+
+    <!-- Indikátor Snímku -->
+    <div class="slide-indicator" id="slide-indicator">Snímek 1 / 9</div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const prevButton = document.getElementById('prev');
+        const nextButton = document.getElementById('next');
+        const slideIndicator = document.getElementById('slide-indicator');
+        let currentSlide = 0;
+        const totalSlides = slides.length;
+
+        function showSlide(index) {
+            // Skryje aktuální slide
+            slides[currentSlide].classList.remove('active');
+
+            // Aktualizuje index
+            currentSlide = index;
+
+            // Zobrazí nový slide
+            slides[currentSlide].classList.add('active');
+
+            // Aktualizuje stav tlačítek
+            prevButton.disabled = currentSlide === 0;
+            nextButton.disabled = currentSlide === totalSlides - 1;
+
+            // Aktualizuje indikátor snímku
+            slideIndicator.textContent = `Snímek ${currentSlide + 1} / ${totalSlides}`;
+        }
+
+        // Ovládání tlačítky
+        prevButton.addEventListener('click', () => {
+            if (currentSlide > 0) {
+                showSlide(currentSlide - 1);
+            }
+        });
+
+        nextButton.addEventListener('click', () => {
+            if (currentSlide < totalSlides - 1) {
+                showSlide(currentSlide + 1);
+            }
+        });
+
+        // Ovládání klávesnicí (šipky vlevo/vpravo)
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'ArrowLeft') {
+                if (currentSlide > 0) {
+                    showSlide(currentSlide - 1);
+                }
+            } else if (event.key === 'ArrowRight') {
+                if (currentSlide < totalSlides - 1) {
+                    showSlide(currentSlide + 1);
+                }
+            }
+        });
+
+        // Inicializace - zobrazí první slide a nastaví tlačítka
+        showSlide(0);
+
+    </script>
+
+</body>
+</html>
